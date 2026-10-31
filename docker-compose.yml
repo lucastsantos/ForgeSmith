@@ -1,0 +1,35 @@
+services:
+  web:
+    build:
+      context: .
+      target: web
+    image: forgesmith-web
+    ports:
+      - "${FORGESMITH_PORT:-8080}:80"
+    volumes:
+      - type: volume
+        source: smith-data
+        target: /usr/share/nginx/html/live
+        read_only: true
+        volume:
+          nocopy: true
+    depends_on:
+      - updater
+    restart: unless-stopped
+
+  updater:
+    build:
+      context: .
+      target: updater
+    image: forgesmith-updater
+    environment:
+      UPDATE_TIME_UTC: ${UPDATE_TIME_UTC:-06:00}
+      FORGE_BRANCH: ${FORGE_BRANCH:-master}
+    volumes:
+      - smith-data:/data
+      - forge-checkout:/forge
+    restart: unless-stopped
+
+volumes:
+  smith-data:
+  forge-checkout:
